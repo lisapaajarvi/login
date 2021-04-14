@@ -24,6 +24,14 @@ app.use(cookieSession({
 app.post('/api/register', async(req,res) => {
     const { name, password } = req.body;
 
+    // check if user exists
+    const existingUser = users.find(u => u.name === name);
+    if(existingUser) {
+        res.status(400).json("Username already exists")
+        return
+    }
+
+    // hash password and save user
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log(hashedPassword)
     const user = {
@@ -31,7 +39,6 @@ app.post('/api/register', async(req,res) => {
         password: hashedPassword
     }
     users.push(user);
-
     res.status(201).json()
 });
 
