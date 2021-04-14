@@ -21,14 +21,17 @@ app.use(cookieSession({
     httpOnly: true
 }));
 
-app.post('/api/register', (req,res) => {
+app.post('/api/register', async(req,res) => {
     const { name, password } = req.body;
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    console.log(hashedPassword)
     const user = {
         name,
         password: hashedPassword
     }
     users.push(user);
-    console.log(hashedPassword)
+
     res.status(201).json()
 });
 
