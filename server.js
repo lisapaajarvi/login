@@ -6,10 +6,7 @@ const app = express();
 
 // Database
 
-const users = [{
-    name: 'Lisa',
-    password: 'marsvinstok123'
-}];
+const users = [];
 
 app.use(express.json());
 
@@ -22,7 +19,7 @@ app.use(cookieSession({
 }));
 
 app.post('/api/register', async(req,res) => {
-    const { name, password } = req.body;
+    const { name, password, role } = req.body;
 
     // check if user exists
     const existingUser = users.find(u => u.name === name);
@@ -36,14 +33,15 @@ app.post('/api/register', async(req,res) => {
     console.log(hashedPassword)
     const user = {
         name,
-        password: hashedPassword
+        password: hashedPassword,
+        role
     }
     users.push(user);
     res.status(201).json()
 });
 
 app.post('/api/login', async (req,res) => {
-    const { name, password} = req.body;
+    const { name, password } = req.body;
     const user = users.find(u => u.name === name);
 
     // check if user or password is incorrect
@@ -53,12 +51,13 @@ app.post('/api/login', async (req,res) => {
     }
     // create session
     req.session.username = user.name;
+    req.session.role = user.role;
 
     // send response
     res.status(204).json(null)
 });
 
-app.get('/api/users', secure, (req,res) => {
+app.get('/api/users', secureWithRole, (req,res) => {
     res.json(users);
 });
 
@@ -79,7 +78,17 @@ function secure (req, res, next) {
     }
 }
 
+ function secureWithRole(role) {
+     return [secure, (req, res, next) => {
+         if(req.session.role === role) {
+             next()
+         }
+         else {
+             res.status(403).json("You don't have the specific rights to access this route");
+         }
+     }]
+}
 
-app.use(express.static('public'));
+//app.use(express.static('public'));
 
 app.listen(port, () => console.log(`Server is running on http://localhost:${port}`))
